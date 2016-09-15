@@ -1,23 +1,20 @@
-import React, { Component } from 'react';
+import React from 'react';
 import './App.css';
+import { connect } from 'react-redux';
 import xhr from 'xhr';
-
 import Plot from './Plot.js';
-class App extends Component {
-  state = {
-    location: '',
-    data: {},
-    dates: [],
-    temps: [],
-    selected: {
-      date: '',
-      temp: null
-    }
-  };
-
+import {
+  changeLocation,
+  setSelectedDate,
+  setSelectedTemp,
+  setData,
+  setDates,
+  setTemps
+} from './actions';
+class App extends React.Component {
   fetchData= (evt) => {
     evt.preventDefault();
-    var location = encodeURIComponent(this.state.location);
+    var location = encodeURIComponent(this.props.location);
     var urlPrefix = 'http://api.openweathermap.org/data/2.5/forecast?q=';
     var urlSuffix = '&APPID=56d8c90d7d558c38332d7f929436617a&units=metric';
     var url = urlPrefix + location + urlSuffix;
@@ -25,47 +22,38 @@ class App extends Component {
     var self = this;
     xhr({
       url: url
-    }, function(err, data){
+    }, function (err, data) {
+
       var body = JSON.parse(data.body);
       var list = body.list;
       var dates = [];
       var temps = [];
-
-      for(var i = 0; i < list.length; i++){
+      for (var i = 0; i < list.length; i++) {
         dates.push(list[i].dt_txt);
         temps.push(list[i].main.temp);
       }
-      self.setState({
-        data: body,
-        dates: dates,
-        temps: temps,
-        selected: {
-          data: '',
-          temp: null
-        }
-      });
+
+      self.props.dispatch(setData(body));
+      self.props.dispatch(setDates(dates));
+      self.props.dispatch(setTemps(temps));
+      self.props.dispatch(setSelectedDate(''));
+      self.props.dispatch(setSelectedTemp(null));
     });
   };
 
   changeLocation = (evt) => {
-    this.setState({
-      location: evt.target.value
-    });
+    this.props.dispatch(changeLocation(evt.target.value));
   };
   onPlotClick = (data) =>{
     if(data.points){
-      this.setState({
-        selected: {
-          date: data.points[0].x,
-          temp: data.points[0].y
-        }
-      });
+      this.props.dispatch(setSelectedDate(data.points[0].x));
+      this.props.dispatch(setSelectedTemp(data.points[0].y));
     }
   };
   render() {
     var currentTemp = 'not loaded yet';
-    if(this.state.data.list){
-      currentTemp = this.state.data.list[0].main.temp;
+    if (this.props.data.list) {
+      currentTemp = this.props.data.list[0].main.temp;
     }
     return (
       <div>
@@ -76,26 +64,23 @@ class App extends Component {
               <input
                 placeholder={"City, Country"}
                 type="text"
-                value={this.state.location}
+                value={this.props.location}
                 onChange={this.changeLocation} />
           </label>
         </form>
 
-        {(this.state.data.list) ? (
+        {(this.props.data.list) ? (
           <div className="wrapper">
-            <p className="temp-wrapper">
-              <span className="temp">
-                {this.state.selected.temp ? this.state.selected.temp : currentTemp}
-              </span>
-              <span className="temp-symbol">°C</span>
-              <span>
-                {this.state.selected.temp ? this.state.selected.date : ''}
-              </span>
-            </p>
+            {/* Render the current temperature if no specific date is selected */}
+            {(this.props.selected.temp) ? (
+              <p>The temperature on { this.props.selected.date } will be { this.props.selected.temp }°C</p>
+            ) : (
+              <p>The current temperature is { currentTemp }°C!</p>
+            )}
             <h2>Forecast</h2>
             <Plot
-              xData={this.state.dates}
-              yData={this.state.temps}
+              xData={this.props.dates}
+              yData={this.props.temps}
               onPlotClick={this.onPlotClick}
               type="scatter"
                />
@@ -108,4 +93,7 @@ class App extends Component {
   }
 }
 
-export default App;
+function mapStateToProps(state){
+  return state;
+}
+export default connect(mapStateToProps)(App);
