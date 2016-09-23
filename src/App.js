@@ -13,7 +13,7 @@ class App extends React.Component {
   fetchData= (evt) => {
     evt.preventDefault();
 
-    var location = encodeURIComponent(this.props.location);
+    var location = encodeURIComponent(this.props.redux.get('location'));
 
     var urlPrefix = 'http://api.openweathermap.org/data/2.5/forecast?q=';
     var urlSuffix = '&APPID=56d8c90d7d558c38332d7f929436617a&units=metric';
@@ -33,8 +33,8 @@ class App extends React.Component {
   };
   render() {
     var currentTemp = 'not loaded yet';
-    if (this.props.data.list) {
-      currentTemp = this.props.data.list[0].main.temp;
+    if (this.props.redux.getIn(['data','list'])) {
+      currentTemp = this.props.redux.getIn(['data', 'list', '0', 'main', 'temp']);
     }
     return (
       <div>
@@ -45,23 +45,23 @@ class App extends React.Component {
               <input
                 placeholder={"City, Country"}
                 type="text"
-                value={this.props.location}
+                value={this.props.redux.get('location')}
                 onChange={this.changeLocation} />
           </label>
         </form>
 
-        {(this.props.data.list) ? (
+        {(this.props.redux.getIn(['data', 'list'])) ? (
           <div className="wrapper">
             {/* Render the current temperature if no specific date is selected */}
-            {(this.props.selected.temp) ? (
-              <p>The temperature on { this.props.selected.date } will be { this.props.selected.temp }°C</p>
+            {(this.props.redux.getIn(['selected', 'temp'])) ? (
+              <p>The temperature on { this.props.redux.getIn(['selected', 'date']) } will be { this.props.redux.getIn(['selected', 'temp']) }°C</p>
             ) : (
               <p>The current temperature is { currentTemp }°C!</p>
             )}
             <h2>Forecast</h2>
             <Plot
-              xData={this.props.dates}
-              yData={this.props.temps}
+              xData={this.props.redux.get('dates')}
+              yData={this.props.redux.get('temps')}
               onPlotClick={this.onPlotClick}
               type="scatter"
                />
@@ -75,6 +75,8 @@ class App extends React.Component {
 }
 
 function mapStateToProps(state){
-  return state;
+  return {
+    redux: state
+  };
 }
 export default connect(mapStateToProps)(App);
