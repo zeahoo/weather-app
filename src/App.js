@@ -9,7 +9,7 @@ import {
   setSelectedTemp,
   fetchData
 } from './actions';
-class App extends React.Component {
+export class App extends React.Component {
   fetchData= (evt) => {
     evt.preventDefault();
 
@@ -41,7 +41,7 @@ class App extends React.Component {
         <h1>Weather</h1>
         <form onSubmit={this.fetchData}>
           <label>
-            I want to know the weather for
+            I want to know today's weather for
               <input
                 placeholder={"City, Country"}
                 type="text"
